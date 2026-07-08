@@ -7,6 +7,8 @@ import type {
   ExtractedRoom,
   FloorLevel,
   PageKind,
+  ReworkCharge,
+  ReworkStatus,
   Room,
   Screen,
   SelectedOption,
@@ -20,6 +22,7 @@ import type {
 import { DEFAULT_RATES, OPTION_GROUPS, TASK_TEMPLATE } from "./data/pricing";
 import { defaultFurniture } from "./data/furnitureLayout";
 import { getGroup, getOption, groupCost } from "./lib/pricingEngine";
+import { GROUP_TASK, SERVICE_ITEMS, taskDone } from "./lib/rework";
 import { nextId } from "./lib/extraction";
 
 export type FloorFilter = FloorLevel | "all";
@@ -84,6 +87,12 @@ interface ProjectState {
 
   // tasks
   setTaskStatus: (roomId: string, taskId: string, status: TaskStatus) => void;
+
+  // rework charges (raised when a change undoes a completed job)
+  reworkCharges: ReworkCharge[];
+  setReworkStatus: (id: string, status: ReworkStatus) => void;
+  /** Free escape hatch: put a moved fitting back and drop its charge. */
+  revertFurnitureMove: (chargeId: string) => void;
 
   // 3D view
   theme: ThemeId;
@@ -296,7 +305,7 @@ export const useStore = create<ProjectState>()(
         }));
         const baseline: Record<string, SelectedOption[]> = {};
         for (const r of rooms) baseline[r.id] = JSON.parse(JSON.stringify(r.selections));
-        set({ rooms, baseline, variations: [], structuralWorks: [], screen: "model", selectedRoomId: null, modelMode: "pricing" });
+        set({ rooms, baseline, variations: [], structuralWorks: [], reworkCharges: [], screen: "model", selectedRoomId: null, modelMode: "pricing" });
         logChange(`Confirmed ${rooms.length} rooms and generated the 3D model`);
       },
       updateRoom: (id, patch) =>
@@ -346,6 +355,39 @@ export const useStore = create<ProjectState>()(
         });
         // after mutation, recompute the live variation card for this group
         set((s) => ({ variations: upsertVariation(s as ProjectState, roomId, groupId) }));
+
+        // If the job that installs this group is already ticked complete,
+        // a spec change means undoing finished work → manage a rework charge.
+        set((s) => {
+          const room = s.rooms.find((r) => r.id === roomId);
+          const taskName = GROUP_TASK[groupId];
+          if (!room || !taskName) return {};
+          const pending = s.reworkCharges.find(
+            (c) => c.source === "option-change" && c.roomId === roomId && c.groupId === groupId && c.status === "pending",
+          );
+          const specChanged = s.variations.some(
+            (v) => v.roomId === roomId && v.groupId === groupId && (v.status === "draft" || v.status === "sent"),
+          );
+          const installedCost = groupCost(room, groupId, s.baseline?.[roomId] ?? [], s.rates);
+          if (taskDone(room, taskName) && specChanged && installedCost > 0) {
+            const charge: ReworkCharge = {
+              id: pending?.id ?? nextId("rw"),
+              roomId,
+              roomName: room.name,
+              taskName,
+              reason: `${getGroup(groupId)?.label} re-specified after "${taskName}" was completed`,
+              source: "option-change",
+              groupId,
+              status: "pending",
+              createdAt: pending?.createdAt ?? now(),
+            };
+            if (!pending) get().logChange(`Rework raised: ${charge.reason}`);
+            return { reworkCharges: [...s.reworkCharges.filter((c) => c.id !== charge.id), charge] };
+          }
+          // spec back to baseline (or job not done) — drop any pending charge
+          return pending ? { reworkCharges: s.reworkCharges.filter((c) => c.id !== pending.id) } : {};
+        });
+
         const room = get().rooms.find((r) => r.id === roomId);
         const opt = optionId ? getOption(groupId, optionId) : null;
         if (room) get().logChange(`${room.name}: ${getGroup(groupId)?.label} → ${opt?.label ?? "changed"}`);
@@ -428,13 +470,82 @@ export const useStore = create<ProjectState>()(
       draggingFurniture: false,
       setDraggingFurniture: (draggingFurniture) => set({ draggingFurniture }),
       moveFurnitureItem: (roomId, itemId, x, z) =>
-        set((s) => ({
-          rooms: s.rooms.map((r) =>
+        set((s) => {
+          const room = s.rooms.find((r) => r.id === roomId);
+          const item = room?.furniture.find((f) => f.id === itemId);
+          if (!room || !item) return {};
+          const prev = { x: item.x, z: item.z };
+          const rooms = s.rooms.map((r) =>
             r.id === roomId
               ? { ...r, furniture: r.furniture.map((f) => (f.id === itemId ? { ...f, x, z } : f)) }
               : r,
-          ),
-        })),
+          );
+
+          // Moving furniture is free — UNLESS it's a serviced fitting and the
+          // job that plumbed/wired it in is already ticked complete. Then the
+          // move re-opens finished work and raises a clearly-priced charge.
+          const svc = SERVICE_ITEMS[item.kind];
+          let reworkCharges = s.reworkCharges;
+          if (svc && taskDone(room, svc.taskName)) {
+            const existing = s.reworkCharges.find(
+              (c) => c.source === "furniture-move" && c.itemId === itemId && c.status === "pending",
+            );
+            // measure from where the fitting sat when the job was completed
+            const origin = existing ? { x: existing.prevX!, z: existing.prevZ! } : prev;
+            const dist = Math.hypot(x - origin.x, z - origin.z);
+            if (dist < 0.4) {
+              // dragged back (near) home — no rework needed after all
+              if (existing) {
+                reworkCharges = s.reworkCharges.filter((c) => c.id !== existing.id);
+                get().logChange(`${svc.label} back in position — rework charge dropped (${room.name})`);
+              }
+            } else {
+              const charge: ReworkCharge = {
+                id: existing?.id ?? nextId("rw"),
+                roomId,
+                roomName: room.name,
+                taskName: svc.taskName,
+                reason: `${svc.label} moved ${dist.toFixed(1)} m after "${svc.taskName}" was completed`,
+                source: "furniture-move",
+                points: svc.points,
+                itemId,
+                itemKind: item.kind,
+                prevX: origin.x,
+                prevZ: origin.z,
+                status: "pending",
+                createdAt: existing?.createdAt ?? now(),
+              };
+              reworkCharges = [...s.reworkCharges.filter((c) => c.id !== charge.id), charge];
+              if (!existing) get().logChange(`Rework raised: ${charge.reason}`);
+            }
+          }
+          return { rooms, reworkCharges };
+        }),
+
+      reworkCharges: [],
+      setReworkStatus: (id, status) =>
+        set((s) => {
+          const c = s.reworkCharges.find((x) => x.id === id);
+          if (c) get().logChange(`Rework ${status}: ${c.reason}`);
+          return { reworkCharges: s.reworkCharges.map((x) => (x.id === id ? { ...x, status } : x)) };
+        }),
+      revertFurnitureMove: (chargeId) =>
+        set((s) => {
+          const c = s.reworkCharges.find((x) => x.id === chargeId);
+          if (!c || c.source !== "furniture-move" || c.prevX == null) return {};
+          get().logChange(`${c.roomName}: fitting moved back — no rework charge`);
+          return {
+            rooms: s.rooms.map((r) =>
+              r.id === c.roomId
+                ? {
+                    ...r,
+                    furniture: r.furniture.map((f) => (f.id === c.itemId ? { ...f, x: c.prevX!, z: c.prevZ! } : f)),
+                  }
+                : r,
+            ),
+            reworkCharges: s.reworkCharges.filter((x) => x.id !== chargeId),
+          };
+        }),
 
       structuralWorks: [],
       addStructuralWork: (w) => {
@@ -589,6 +700,7 @@ export const useStore = create<ProjectState>()(
           variations: [],
           changes: [],
           structuralWorks: [],
+          reworkCharges: [],
           structTarget: null,
           modelMode: "pricing",
           selectedRoomId: null,
@@ -622,6 +734,7 @@ export const useStore = create<ProjectState>()(
         theme: s.theme,
         changes: s.changes,
         structuralWorks: s.structuralWorks,
+        reworkCharges: s.reworkCharges,
         screen: s.screen === "confirm" ? "upload" : s.screen,
       }),
     },

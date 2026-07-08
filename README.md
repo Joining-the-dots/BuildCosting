@@ -47,8 +47,19 @@ variation (change-order) tracking.
    the room.
 6. **Pricing Library** — edit every unit rate (plus margin % and VAT %); the
    whole project reprices live.
-7. **Progress** — 8 standard tasks per room (strip out → snagging), click to
-   cycle status; progress bars per room and whole-project.
+7. **Progress / Project Manager** — 8 standard jobs per room (strip out →
+   snagging). The Project Manager screen lists every room with a tickable job
+   checklist and whole-project progress. Jobs can also be cycled from the
+   room panel in the 3D view.
+7b. **Rework charges** — jobs map to the specs they install (Flooring ↔
+   flooring/UFH, First fix plumbing ↔ plumbing + bath/WC/vanity/shower/kitchen
+   fittings, etc.). Once a job is ticked complete, changing that spec — or
+   dragging a plumbed/wired fitting to a new position — raises a clearly
+   priced rework charge (undo = 40% of the installed work for spec changes,
+   per-fitting service re-route for moves; both editable rates). Charges show
+   a warning before you change, appear on the Project Manager screen
+   (accept / waive / free "undo move"), get their own line in the price
+   summary, and auto-drop if you put things back how they were.
 8. **Variations** — changing any option after the model is generated diffs the
    room against the approved baseline and raises a draft variation card
    (draft → sent → approved/rejected). Approving folds it into the baseline;

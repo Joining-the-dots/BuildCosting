@@ -16,8 +16,13 @@ export default function Dashboard() {
   const setScreen = useStore((s) => s.setScreen);
   const selectRoom = useStore((s) => s.selectRoom);
   const structuralWorks = useStore((s) => s.structuralWorks);
+  const reworkCharges = useStore((s) => s.reworkCharges);
+  const baseline = useStore((s) => s.baseline);
 
-  const totals = useMemo(() => projectTotals(rooms, rates, structuralWorks), [rooms, rates, structuralWorks]);
+  const totals = useMemo(
+    () => projectTotals(rooms, rates, structuralWorks, reworkCharges, baseline),
+    [rooms, rates, structuralWorks, reworkCharges, baseline],
+  );
   const approved = variations.filter((v) => v.status === "approved");
   const pending = variations.filter((v) => v.status === "draft" || v.status === "sent");
   const approvedSum = approved.reduce((s, v) => s + v.delta, 0);

@@ -8,8 +8,10 @@ import type {
   SelectedOption,
   StructuralWork,
 } from "../types";
+import type { ReworkCharge } from "../types";
 import { OPTION_GROUPS } from "../data/pricing";
 import { structuralSubtotal } from "./structural";
+import { reworkTotal } from "./rework";
 
 /** Derived quantities. Wall area nets off standard door/window openings. */
 export function deriveRoom(room: Pick<Room, "geometry" | "doors" | "windows">): RoomDerived {
@@ -107,26 +109,30 @@ export function roomSubtotal(room: Room, rates: BuilderRate[]): number {
 export interface ProjectTotals {
   rooms: number;
   structural: number;
+  rework: number;
   works: number;
   margin: number;
   vat: number;
   total: number;
 }
 
-/** Whole-project totals: room works + structural works + margin + VAT. */
+/** Whole-project totals: room works + structural works + rework + margin + VAT. */
 export function projectTotals(
   rooms: Room[],
   rates: BuilderRate[],
   structuralWorks: StructuralWork[] = [],
+  reworkCharges: ReworkCharge[] = [],
+  baseline: Record<string, SelectedOption[]> | null = null,
 ): ProjectTotals {
   const roomsSum = rooms.reduce((s, r) => s + roomSubtotal(r, rates), 0);
   const structural = structuralSubtotal(structuralWorks, rates);
-  const works = roomsSum + structural;
+  const rework = reworkTotal(reworkCharges, rooms, baseline, rates);
+  const works = roomsSum + structural + rework;
   const marginPct = rates.find((r) => r.id === "margin_pct")?.rate ?? 0;
   const vatPct = rates.find((r) => r.id === "vat_pct")?.rate ?? 0;
   const margin = Math.round(works * (marginPct / 100));
   const vat = Math.round((works + margin) * (vatPct / 100));
-  return { rooms: roomsSum, structural, works, margin, vat, total: works + margin + vat };
+  return { rooms: roomsSum, structural, rework, works, margin, vat, total: works + margin + vat };
 }
 
 /**

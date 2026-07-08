@@ -1,10 +1,11 @@
-import { Building2, FileUp, GitPullRequestArrow, LayoutDashboard, PoundSterling, Rotate3d } from "lucide-react";
+import { Building2, ClipboardCheck, FileUp, GitPullRequestArrow, LayoutDashboard, PoundSterling, Rotate3d } from "lucide-react";
 import { useStore } from "./store";
 import type { Screen } from "./types";
 import Dashboard from "./screens/Dashboard";
 import UploadScreen from "./screens/UploadScreen";
 import ConfirmRoomsScreen from "./screens/ConfirmRoomsScreen";
 import ModelScreen from "./screens/ModelScreen";
+import ProjectManagerScreen from "./screens/ProjectManagerScreen";
 import RatesScreen from "./screens/RatesScreen";
 import VariationsScreen from "./screens/VariationsScreen";
 import { projectTotals } from "./lib/pricingEngine";
@@ -14,6 +15,7 @@ const NAV: Array<{ id: Screen; label: string; icon: typeof LayoutDashboard }> = 
   { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
   { id: "upload", label: "Plan Upload", icon: FileUp },
   { id: "model", label: "3D Model", icon: Rotate3d },
+  { id: "pm", label: "Project Manager", icon: ClipboardCheck },
   { id: "rates", label: "Pricing Library", icon: PoundSterling },
   { id: "variations", label: "Variations", icon: GitPullRequestArrow },
 ];
@@ -26,9 +28,12 @@ export default function App() {
   const variations = useStore((s) => s.variations);
   const projectName = useStore((s) => s.projectName);
   const structuralWorks = useStore((s) => s.structuralWorks);
+  const reworkCharges = useStore((s) => s.reworkCharges);
+  const baseline = useStore((s) => s.baseline);
 
-  const totals = projectTotals(rooms, rates, structuralWorks);
+  const totals = projectTotals(rooms, rates, structuralWorks, reworkCharges, baseline);
   const pendingVars = variations.filter((v) => v.status === "draft" || v.status === "sent").length;
+  const pendingRework = reworkCharges.filter((c) => c.status === "pending").length;
 
   return (
     <div className="h-full flex bg-stone-100 text-stone-900 antialiased">
@@ -63,6 +68,11 @@ export default function App() {
                   {pendingVars}
                 </span>
               )}
+              {id === "pm" && pendingRework > 0 && (
+                <span className="ml-auto bg-rose-500 text-white text-[10px] font-bold rounded-full px-1.5 py-0.5">
+                  {pendingRework}
+                </span>
+              )}
             </button>
           ))}
         </nav>
@@ -79,6 +89,7 @@ export default function App() {
         {screen === "upload" && <UploadScreen />}
         {screen === "confirm" && <ConfirmRoomsScreen />}
         {screen === "model" && <ModelScreen />}
+        {screen === "pm" && <ProjectManagerScreen />}
         {screen === "rates" && <RatesScreen />}
         {screen === "variations" && <VariationsScreen />}
       </main>

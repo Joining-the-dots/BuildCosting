@@ -215,5 +215,31 @@ export type Screen =
   | "upload"
   | "confirm"
   | "model"
+  | "pm"
   | "rates"
   | "variations";
+
+export type ReworkStatus = "pending" | "accepted" | "waived";
+
+/**
+ * A rework charge: raised automatically when a change would undo a job that
+ * is already ticked complete — e.g. re-specifying flooring after the Flooring
+ * task is done, or moving a plumbed-in fitting after first fix. The amount is
+ * always computed live from the rate library (see lib/rework.ts).
+ */
+export interface ReworkCharge {
+  id: string;
+  roomId: string;
+  roomName: string;
+  taskName: string; // the completed job that would need undoing
+  reason: string;
+  source: "option-change" | "furniture-move";
+  groupId?: string; // option-change: amount = baseline group cost × undo %
+  points?: number; // furniture-move: amount = points × service re-route rate
+  itemId?: string;
+  itemKind?: string;
+  prevX?: number; // original position, for the free "undo move" escape hatch
+  prevZ?: number;
+  status: ReworkStatus;
+  createdAt: string;
+}

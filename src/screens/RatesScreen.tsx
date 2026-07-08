@@ -15,7 +15,12 @@ export default function RatesScreen() {
   const resetRates = useStore((s) => s.resetRates);
   const rooms = useStore((s) => s.rooms);
   const structuralWorks = useStore((s) => s.structuralWorks);
-  const totals = useMemo(() => projectTotals(rooms, rates, structuralWorks), [rooms, rates, structuralWorks]);
+  const reworkCharges = useStore((s) => s.reworkCharges);
+  const baseline = useStore((s) => s.baseline);
+  const totals = useMemo(
+    () => projectTotals(rooms, rates, structuralWorks, reworkCharges, baseline),
+    [rooms, rates, structuralWorks, reworkCharges, baseline],
+  );
 
   const categories = [...new Set(rates.map((r) => r.category))];
 

@@ -43,6 +43,9 @@ export const DEFAULT_RATES: BuilderRate[] = [
   { id: "doors_steel", label: "Steel Crittall-style doors", unit: "m²", rate: 2100, category: "Structural" },
   { id: "doors_alu", label: "Aluminium sliding doors", unit: "m²", rate: 1350, category: "Structural" },
   { id: "doors_upvc", label: "uPVC French doors", unit: "m²", rate: 900, category: "Structural" },
+
+  { id: "rework_undo_pct", label: "Undoing completed work (of original cost)", unit: "%", rate: 40, category: "Rework" },
+  { id: "rework_service_move", label: "Re-route services to a moved fitting", unit: "item", rate: 350, category: "Rework" },
 ];
 
 /** Glazed garden-door design types offered on exterior walls. */

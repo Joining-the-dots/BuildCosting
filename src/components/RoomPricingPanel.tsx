@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { ChevronLeft, ClipboardList, Hammer, Info, ListChecks } from "lucide-react";
+import { ChevronLeft, ClipboardList, Hammer, Info, ListChecks, TriangleAlert } from "lucide-react";
 import { useStore } from "../store";
 import { OPTION_GROUPS } from "../data/pricing";
+import { GROUP_TASK, taskDone, undoCostForGroup } from "../lib/rework";
 import {
   deriveRoom,
   roomConfidenceNote,
@@ -152,15 +153,30 @@ export default function RoomPricingPanel({ room }: { room: Room }) {
 function PricingTab({ room }: { room: Room }) {
   const rates = useStore((s) => s.rates);
   const setSelection = useStore((s) => s.setSelection);
+  const baseline = useStore((s) => s.baseline);
   const derived = deriveRoom(room);
 
   return (
     <div className="p-4 space-y-5">
       {OPTION_GROUPS.map((group) => {
         const current = room.selections.filter((s) => s.groupId === group.id);
+        // If the job that installs this group is already ticked complete,
+        // warn up-front what changing the spec will cost in rework.
+        const task = GROUP_TASK[group.id];
+        const done = task ? taskDone(room, task) : false;
+        const undoCost = done ? undoCostForGroup(room, group.id, baseline, rates) : 0;
         return (
           <div key={group.id}>
             <SectionTitle>{group.label}</SectionTitle>
+            {done && undoCost > 0 && (
+              <div className="mb-1.5 flex items-start gap-1.5 rounded-md bg-rose-50 border border-rose-200 px-2 py-1.5 text-[10px] leading-snug text-rose-700">
+                <TriangleAlert className="w-3 h-3 shrink-0 mt-0.5" />
+                <span>
+                  "{task}" is ticked complete — changing this spec adds ~{gbp(undoCost)} rework to undo the finished
+                  work.
+                </span>
+              </div>
+            )}
             <div className="space-y-1.5">
               {!group.multi && (
                 <OptionButton

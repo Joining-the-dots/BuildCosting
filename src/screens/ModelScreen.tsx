@@ -34,10 +34,15 @@ export default function ModelScreen() {
   const setModelMode = useStore((s) => s.setModelMode);
   const structuralWorks = useStore((s) => s.structuralWorks);
   const structTarget = useStore((s) => s.structTarget);
+  const reworkCharges = useStore((s) => s.reworkCharges);
+  const baseline = useStore((s) => s.baseline);
 
   const structuralMode = modelMode === "structural";
   const selected = rooms.find((r) => r.id === selectedRoomId) ?? null;
-  const totals = useMemo(() => projectTotals(rooms, rates, structuralWorks), [rooms, rates, structuralWorks]);
+  const totals = useMemo(
+    () => projectTotals(rooms, rates, structuralWorks, reworkCharges, baseline),
+    [rooms, rates, structuralWorks, reworkCharges, baseline],
+  );
 
   const floors: Array<{ id: FloorFilter; label: string }> = [
     { id: "ground", label: "Ground" },
@@ -126,6 +131,7 @@ export default function ModelScreen() {
           <div className="space-y-1 text-xs text-stone-500">
             <Row label="Room works" value={gbp(totals.rooms)} />
             <Row label="Structural works" value={gbp(totals.structural)} highlight={totals.structural > 0} />
+            {totals.rework > 0 && <Row label="Rework" value={gbp(totals.rework)} highlight />}
             <Row label="Margin" value={gbp(totals.margin)} />
             <Row label="VAT" value={gbp(totals.vat)} />
           </div>
