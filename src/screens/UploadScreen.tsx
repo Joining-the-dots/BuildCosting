@@ -60,8 +60,11 @@ export default function UploadScreen() {
           uploadedAt: new Date().toISOString(),
         });
         // Try to name the project from the title block (e.g. "21 Thornton Road").
-        // Negative lookbehind excludes neighbour labels like "44/45/46 Denmark Road".
-        const addr = pages[0]?.text.match(/(?<![/\d])\d+[a-z]?\s+[A-Z][a-z]+\s+(Road|Street|Lane|Avenue|Close|Drive|Gardens)/);
+        // Whitespace is collapsed first (pdf.js splits words across lines);
+        // negative lookbehind excludes neighbour labels like "44/45/46 Denmark Road".
+        const addr = pages[0]?.text
+          .replace(/\s+/g, " ")
+          .match(/(?<![/\d])\d+[a-z]?\s+[A-Z][a-z]+\s+(Road|Street|Lane|Avenue|Close|Drive|Gardens)/);
         if (addr) setProjectName(addr[0]);
         setActivePage(pages.findIndex((p) => p.kind === "ground") >= 0 ? pages.findIndex((p) => p.kind === "ground") : 0);
         logChange(`Uploaded plan "${fileName}" (${pdf.numPages} pages)`);
