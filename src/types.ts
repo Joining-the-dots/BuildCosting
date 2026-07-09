@@ -19,7 +19,7 @@ export type PageKind =
 
 export type Confidence = "low" | "medium" | "high";
 
-export type ThemeId = "dollhouse" | "architectural" | "dark";
+export type ThemeId = "dollhouse" | "architectural";
 
 export type TaskStatus = "not_started" | "in_progress" | "complete" | "approved";
 

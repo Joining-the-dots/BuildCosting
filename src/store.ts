@@ -721,6 +721,8 @@ export const useStore = create<ProjectState>()(
         merged.rooms = (merged.rooms ?? []).map((r) =>
           r.furniture?.length ? r : { ...r, furniture: defaultFurniture(r) },
         );
+        // the "dark" theme was removed — migrate old saves to the default
+        if ((merged.theme as string) === "dark") merged.theme = "dollhouse";
         return merged;
       },
       partialize: (s) => ({

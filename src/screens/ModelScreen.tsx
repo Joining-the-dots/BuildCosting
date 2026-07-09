@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { Box, Building2, Hammer, Layers, Moon, Mountain, Palette, PoundSterling, Video } from "lucide-react";
+import { Box, Building2, Hammer, Layers, Mountain, Palette, PoundSterling, Video } from "lucide-react";
 import { useStore, type FloorFilter } from "../store";
 import Scene from "../three/Scene";
 import RoomPricingPanel from "../components/RoomPricingPanel";
@@ -172,12 +172,19 @@ export default function ModelScreen() {
             <button
               key={f.id}
               onClick={() => setFloorFilter(f.id)}
-              className={`px-3 py-1.5 text-xs font-medium transition-colors ${
+              className={`px-2.5 sm:px-3 py-1.5 text-xs font-medium transition-colors ${
                 floorFilter === f.id ? "bg-stone-800 text-white" : "text-stone-600 hover:bg-stone-100"
               }`}
             >
-              <Layers className="w-3 h-3 inline mr-1 -mt-0.5" />
-              {f.label}
+              <Layers className="w-3 h-3 mr-1 -mt-0.5 hidden sm:inline" />
+              {f.id === "all" ? (
+                <>
+                  <span className="sm:hidden">All</span>
+                  <span className="hidden sm:inline">Whole house</span>
+                </>
+              ) : (
+                f.label
+              )}
             </button>
           ))}
         </div>
@@ -186,7 +193,7 @@ export default function ModelScreen() {
         <div className="absolute top-4 right-4 flex gap-2">
           <div className="flex rounded-lg overflow-hidden border border-stone-300/60 shadow-sm bg-white/90 backdrop-blur">
             {(Object.keys(THEMES) as ThemeId[]).map((t) => {
-              const Icon = t === "dollhouse" ? Palette : t === "architectural" ? Box : Moon;
+              const Icon = t === "dollhouse" ? Palette : Box;
               return (
                 <button
                   key={t}
@@ -207,7 +214,7 @@ export default function ModelScreen() {
             className="px-2.5 py-1.5 rounded-lg border border-stone-300/60 shadow-sm bg-white/90 backdrop-blur text-stone-600 hover:bg-stone-100 text-xs inline-flex items-center gap-1.5"
           >
             {cameraMode === "iso" ? <Video className="w-3.5 h-3.5" /> : <Mountain className="w-3.5 h-3.5" />}
-            {cameraMode === "iso" ? "Isometric" : "Top-down"}
+            <span className="hidden sm:inline">{cameraMode === "iso" ? "Isometric" : "Top-down"}</span>
           </button>
         </div>
 
