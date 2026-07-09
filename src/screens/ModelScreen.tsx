@@ -66,9 +66,9 @@ export default function ModelScreen() {
   }
 
   return (
-    <div className="h-full flex overflow-hidden">
-      {/* left: room list */}
-      <div className="w-72 shrink-0 bg-white border-r border-stone-200 flex flex-col">
+    <div className="h-full flex flex-col md:flex-row overflow-hidden">
+      {/* left: room list (desktop) */}
+      <div className="hidden md:flex w-72 shrink-0 bg-white border-r border-stone-200 flex-col">
         <div className="px-4 py-3 border-b border-stone-200">
           <h2 className="font-semibold text-sm text-stone-800">Rooms</h2>
           <p className="text-[11px] text-stone-400">
@@ -143,11 +143,11 @@ export default function ModelScreen() {
       </div>
 
       {/* centre: 3D canvas + floating controls */}
-      <div className="flex-1 relative min-w-0">
+      <div className="flex-1 relative min-w-0 min-h-0">
         <Scene />
 
-        {/* mode toggle — top centre */}
-        <div className="absolute top-4 left-1/2 -translate-x-1/2 flex rounded-lg overflow-hidden border border-stone-300/60 shadow-md bg-white/90 backdrop-blur">
+        {/* mode toggle — top centre (second row on phones) */}
+        <div className="absolute top-[52px] md:top-4 left-1/2 -translate-x-1/2 flex rounded-lg overflow-hidden border border-stone-300/60 shadow-md bg-white/90 backdrop-blur">
           <button
             onClick={() => setModelMode("pricing")}
             className={`px-4 py-1.5 text-xs font-semibold inline-flex items-center gap-1.5 transition-colors ${
@@ -211,17 +211,17 @@ export default function ModelScreen() {
           </button>
         </div>
 
-        {/* structural hint bar */}
+        {/* structural hint bar (desktop — the works panel header explains on mobile) */}
         {structuralMode && !structTarget && (
-          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 px-4 py-2 rounded-full bg-rose-600/90 text-white text-xs font-medium shadow-lg backdrop-blur pointer-events-none">
+          <div className="hidden md:block absolute bottom-4 left-1/2 -translate-x-1/2 px-4 py-2 rounded-full bg-rose-600/90 text-white text-xs font-medium shadow-lg backdrop-blur pointer-events-none">
             Structural mode · {FLOOR_LABEL[floorFilter]} — click a wall to remove it or fit doors, click a floor to
             demolish, split or add a wall
           </div>
         )}
 
-        {/* focus-mode breadcrumb (pricing mode) */}
+        {/* focus-mode breadcrumb (pricing mode, desktop) */}
         {!structuralMode && selected && (
-          <div className="absolute bottom-4 left-1/2 -translate-x-1/2">
+          <div className="hidden md:block absolute bottom-4 left-1/2 -translate-x-1/2">
             <button
               onClick={() => selectRoom(null)}
               className="px-4 py-2 rounded-full bg-stone-900/85 text-white text-xs font-medium shadow-lg backdrop-blur hover:bg-stone-800"
@@ -231,11 +231,26 @@ export default function ModelScreen() {
           </div>
         )}
 
+        {/* mobile room chip strip */}
+        {!structuralMode && !selected && rooms.length > 0 && (
+          <div className="md:hidden absolute bottom-3 inset-x-3 flex gap-1.5 overflow-x-auto pb-1">
+            {rooms.map((room) => (
+              <button
+                key={room.id}
+                onClick={() => selectRoom(room.id)}
+                className="shrink-0 px-3 py-2 rounded-full bg-white/95 border border-stone-300 shadow-sm text-[11px] font-medium text-stone-700 whitespace-nowrap"
+              >
+                {room.name} <span className="text-stone-400">{gbp(roomSubtotal(room, rates))}</span>
+              </button>
+            ))}
+          </div>
+        )}
+
         {/* structural contextual action card */}
         {structuralMode && <StructuralActionCard />}
       </div>
 
-      {/* right panel */}
+      {/* right panel (bottom sheet on phones) */}
       {structuralMode ? <StructuralWorksPanel /> : selected && <RoomPricingPanel key={selected.id} room={selected} />}
     </div>
   );

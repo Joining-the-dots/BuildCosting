@@ -25,7 +25,7 @@ export function StructuralWorksPanel() {
   const subtotal = structuralSubtotal(works, rates);
 
   return (
-    <div className="w-[340px] shrink-0 h-full bg-white border-l border-stone-200 flex flex-col overflow-hidden">
+    <div className="w-full md:w-[340px] shrink-0 h-[38vh] md:h-full bg-white border-t md:border-t-0 md:border-l border-stone-200 flex flex-col overflow-hidden">
       <div className="px-4 pt-4 pb-3 border-b border-stone-200">
         <h2 className="font-semibold text-stone-800 flex items-center gap-2">
           <Hammer className="w-4 h-4 text-rose-500" />

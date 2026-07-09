@@ -61,9 +61,9 @@ export default function ConfirmRoomsScreen() {
   }
 
   return (
-    <div className="h-full flex overflow-hidden">
-      {/* left: PDF preview */}
-      <div className="w-[46%] shrink-0 border-r border-stone-200 bg-stone-100 flex flex-col">
+    <div className="h-full flex flex-col md:flex-row overflow-hidden">
+      {/* PDF preview (collapses to a strip on phones) */}
+      <div className="w-full md:w-[46%] h-[32vh] md:h-auto shrink-0 border-b md:border-b-0 md:border-r border-stone-200 bg-stone-100 flex flex-col">
         <div className="px-4 py-2.5 bg-white border-b border-stone-200 flex gap-2 items-center overflow-x-auto">
           {plan.pages
             .filter((p) => p.kind === "ground" || p.kind === "first")
@@ -91,8 +91,8 @@ export default function ConfirmRoomsScreen() {
       </div>
 
       {/* right: room list editor */}
-      <div className="flex-1 flex flex-col overflow-hidden bg-white">
-        <div className="px-6 py-4 border-b border-stone-200 flex items-center justify-between">
+      <div className="flex-1 min-h-0 flex flex-col overflow-hidden bg-white">
+        <div className="px-4 md:px-6 py-3 md:py-4 border-b border-stone-200 flex items-center justify-between gap-2">
           <div>
             <h2 className="font-semibold text-stone-800">Confirm rooms</h2>
             <p className="text-xs text-stone-500 mt-0.5">
@@ -112,7 +112,7 @@ export default function ConfirmRoomsScreen() {
           )}
         </div>
 
-        <div className="flex-1 overflow-y-auto px-6 py-4 space-y-6">
+        <div className="flex-1 overflow-y-auto px-4 md:px-6 py-4 space-y-6">
           {byFloor.map(({ floor, rooms }) => (
             <div key={floor}>
               <div className="flex items-center justify-between mb-2">

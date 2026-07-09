@@ -94,7 +94,8 @@ export default function Scene() {
     <Canvas
       shadows
       camera={{ position: [14, 12, 14], fov: 35 }}
-      style={{ background: theme.canvasBg }}
+      // touchAction none stops the browser hijacking touch drags for scrolling
+      style={{ background: theme.canvasBg, touchAction: "none" }}
       gl={{ preserveDrawingBuffer: true, antialias: true }}
       onPointerMissed={() => (structuralMode ? setStructTarget(null) : selectRoom(null))}
     >

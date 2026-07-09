@@ -189,9 +189,9 @@ export default function UploadScreen() {
   const floorPages = plan.pages.filter((p) => p.kind === "ground" || p.kind === "first").length;
 
   return (
-    <div className="h-full flex overflow-hidden">
-      {/* left: thumbnails + classification */}
-      <div className="w-80 shrink-0 border-r border-stone-200 bg-white overflow-y-auto p-4">
+    <div className="h-full flex flex-col md:flex-row overflow-hidden">
+      {/* pages: thumbnails + classification (top strip on phones, left rail on desktop) */}
+      <div className="w-full md:w-80 shrink-0 max-h-[42vh] md:max-h-none border-b md:border-b-0 md:border-r border-stone-200 bg-white overflow-y-auto p-4">
         <div className="flex items-center justify-between mb-1">
           <h2 className="font-semibold text-stone-800 text-sm">Pages</h2>
           <button onClick={() => setPlan(null)} className="text-xs text-stone-400 hover:text-rose-500">
@@ -202,7 +202,7 @@ export default function UploadScreen() {
           {plan.fileName} · {plan.numPages} pages
           {plan.scaleNote && <span className="ml-1 text-stone-400">· {plan.scaleNote}</span>}
         </p>
-        <div className="space-y-3">
+        <div className="grid grid-cols-2 md:grid-cols-1 gap-3">
           {plan.pages.map((p) => (
             <div
               key={p.index}
@@ -247,9 +247,9 @@ export default function UploadScreen() {
             <Loader2 className="w-8 h-8 text-stone-400 animate-spin mt-20" />
           )}
         </div>
-        <div className="border-t border-stone-200 bg-white px-6 py-4 flex items-center justify-between">
-          <div className="text-sm text-stone-600 flex items-center gap-2">
-            <FileCheck2 className="w-4 h-4 text-emerald-500" />
+        <div className="border-t border-stone-200 bg-white px-4 md:px-6 py-3 md:py-4 flex flex-col sm:flex-row gap-2.5 sm:items-center sm:justify-between">
+          <div className="text-xs md:text-sm text-stone-600 flex items-center gap-2">
+            <FileCheck2 className="w-4 h-4 text-emerald-500 shrink-0" />
             {floorPages} page{floorPages === 1 ? "" : "s"} marked as floor plans — room labels will be read from these.
           </div>
           <button

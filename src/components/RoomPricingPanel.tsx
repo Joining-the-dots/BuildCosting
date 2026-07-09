@@ -44,7 +44,7 @@ export default function RoomPricingPanel({ room }: { room: Room }) {
   const done = room.tasks.filter((t) => t.status === "complete" || t.status === "approved").length;
 
   return (
-    <div className="w-[380px] shrink-0 h-full bg-white border-l border-stone-200 flex flex-col overflow-hidden">
+    <div className="w-full md:w-[380px] shrink-0 h-[48vh] md:h-full bg-white border-t md:border-t-0 md:border-l border-stone-200 flex flex-col overflow-hidden">
       {/* header */}
       <div className="px-4 pt-4 pb-3 border-b border-stone-200">
         <button

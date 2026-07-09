@@ -34,7 +34,7 @@ export default function Dashboard() {
 
   return (
     <div className="h-full overflow-y-auto">
-      <div className="max-w-6xl mx-auto p-8">
+      <div className="max-w-6xl mx-auto p-4 sm:p-8">
         <div className="flex items-end justify-between flex-wrap gap-3">
           <div>
             <p className="text-[11px] font-semibold uppercase tracking-wider text-stone-400">Project</p>

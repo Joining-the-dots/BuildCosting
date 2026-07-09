@@ -11,13 +11,13 @@ import VariationsScreen from "./screens/VariationsScreen";
 import { projectTotals } from "./lib/pricingEngine";
 import { gbp } from "./lib/format";
 
-const NAV: Array<{ id: Screen; label: string; icon: typeof LayoutDashboard }> = [
-  { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { id: "upload", label: "Plan Upload", icon: FileUp },
-  { id: "model", label: "3D Model", icon: Rotate3d },
-  { id: "pm", label: "Project Manager", icon: ClipboardCheck },
-  { id: "rates", label: "Pricing Library", icon: PoundSterling },
-  { id: "variations", label: "Variations", icon: GitPullRequestArrow },
+const NAV: Array<{ id: Screen; label: string; short: string; icon: typeof LayoutDashboard }> = [
+  { id: "dashboard", label: "Dashboard", short: "Home", icon: LayoutDashboard },
+  { id: "upload", label: "Plan Upload", short: "Plan", icon: FileUp },
+  { id: "model", label: "3D Model", short: "3D", icon: Rotate3d },
+  { id: "pm", label: "Project Manager", short: "PM", icon: ClipboardCheck },
+  { id: "rates", label: "Pricing Library", short: "Rates", icon: PoundSterling },
+  { id: "variations", label: "Variations", short: "Changes", icon: GitPullRequestArrow },
 ];
 
 export default function App() {
@@ -36,9 +36,20 @@ export default function App() {
   const pendingRework = reworkCharges.filter((c) => c.status === "pending").length;
 
   return (
-    <div className="h-full flex bg-stone-100 text-stone-900 antialiased">
-      {/* sidebar */}
-      <aside className="w-52 shrink-0 bg-stone-900 text-stone-300 flex flex-col">
+    <div className="h-full flex flex-col md:flex-row bg-stone-100 text-stone-900 antialiased">
+      {/* mobile top bar */}
+      <header className="md:hidden flex items-center justify-between gap-3 px-4 h-12 bg-stone-900 text-white shrink-0">
+        <div className="flex items-center gap-2 min-w-0">
+          <div className="w-6 h-6 rounded-md bg-amber-500 flex items-center justify-center shrink-0">
+            <Building2 className="w-3.5 h-3.5 text-white" />
+          </div>
+          <span className="text-sm font-semibold truncate">{projectName}</span>
+        </div>
+        <span className="text-sm font-bold tabular-nums shrink-0">{gbp(totals.total)}</span>
+      </header>
+
+      {/* sidebar (desktop) */}
+      <aside className="hidden md:flex w-52 shrink-0 bg-stone-900 text-stone-300 flex-col">
         <div className="px-4 py-5 border-b border-stone-800">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg bg-amber-500 flex items-center justify-center">
@@ -84,7 +95,7 @@ export default function App() {
       </aside>
 
       {/* main */}
-      <main className="flex-1 min-w-0 h-full overflow-hidden">
+      <main className="flex-1 min-w-0 min-h-0 overflow-hidden">
         {screen === "dashboard" && <Dashboard />}
         {screen === "upload" && <UploadScreen />}
         {screen === "confirm" && <ConfirmRoomsScreen />}
@@ -93,6 +104,31 @@ export default function App() {
         {screen === "rates" && <RatesScreen />}
         {screen === "variations" && <VariationsScreen />}
       </main>
+
+      {/* mobile bottom tab bar */}
+      <nav className="md:hidden shrink-0 h-14 bg-stone-900 border-t border-stone-800 flex items-stretch" style={{ paddingBottom: "env(safe-area-inset-bottom)" }}>
+        {NAV.map(({ id, short, icon: Icon }) => {
+          const active = screen === id || (id === "upload" && screen === "confirm");
+          const badge = id === "variations" ? pendingVars : id === "pm" ? pendingRework : 0;
+          return (
+            <button
+              key={id}
+              onClick={() => setScreen(id)}
+              className={`flex-1 flex flex-col items-center justify-center gap-0.5 relative ${
+                active ? "text-amber-400" : "text-stone-400"
+              }`}
+            >
+              <Icon className="w-4.5 h-4.5" />
+              <span className="text-[9px] font-medium">{short}</span>
+              {badge > 0 && (
+                <span className="absolute top-1.5 right-1/2 translate-x-4 bg-rose-500 text-white text-[8px] font-bold rounded-full min-w-[14px] px-1 text-center">
+                  {badge}
+                </span>
+              )}
+            </button>
+          );
+        })}
+      </nav>
     </div>
   );
 }
