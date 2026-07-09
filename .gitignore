@@ -19,3 +19,6 @@ Thumbs.db
 .env
 .env.*
 !.env.example
+
+# vite dev-server temp config bundles
+vite.config.ts.timestamp-*
